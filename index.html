@@ -28,6 +28,8 @@
   .lbl.logo{background:rgba(30,59,47,.92);border-color:var(--white);color:var(--white)}
   .lbl.ribbon{background:rgba(185,31,28,.92);border-color:#fff;color:#fff}
   .lbl.sign{background:rgba(40,44,120,.92);border-color:#9ea4ff;color:#dfe1ff}
+  .lbl.upper{background:rgba(155,40,39,.92);border-color:var(--cream);color:var(--cream)}
+  .lbl.ww{background:rgba(255,214,150,.95);border-color:#7a5a20;color:#3a2a10}
   .lbl.door{background:rgba(214,184,126,.95);border-color:var(--green);color:var(--green)}
   .lbl.box{background:var(--cream);border-color:var(--red);color:var(--red);font-size:12px;padding:4px 8px}
   .lbl.meas{background:#fff;border-color:#000;color:#000;font-size:12px}
@@ -43,13 +45,13 @@
 <body>
 <canvas id="c"></canvas>
 <div id="load">YÜKLENİYOR…</div>
-<header><h1>NEW YEAR'S MARKET · CEPHE 3D</h1><span class="sub">GALATAPORT · SAAT KULESİ MEYDANI · ALT 2 M MESH BASKI + KURDELE + TABELA</span></header>
+<header><h1>NEW YEAR'S MARKET · CEPHE 3D</h1><span class="sub">GALATAPORT · SAAT KULESİ MEYDANI · MESH BASKI + KURDELE + TABELA + WALL WASHER</span></header>
 <div class="bar">
   <div class="grp" id="views"><b>GÖRÜNÜM</b><button data-v="all">GENEL</button><button data-v="top">ÜSTTEN</button></div>
   <div class="grp" id="layers"><b>ETİKETLER</b>
     <button class="on" data-l="box">KUTU</button><button class="on" data-l="strip">BASKI PARÇASI</button>
     <button class="on" data-l="panel">NYM PANEL</button><button class="on" data-l="logo">LOGO</button>
-    <button class="on" data-l="ribbon">KURDELE</button><button class="on" data-l="sign">TABELA</button><button class="on" data-l="door">GİRİŞ</button>
+    <button class="on" data-l="upper">ÜST PANEL</button><button class="on" data-l="ww">WALL WASHER</button><button class="on" data-l="ribbon">KURDELE</button><button class="on" data-l="sign">TABELA</button><button class="on" data-l="door">GİRİŞ</button>
   </div>
   <div class="grp"><b>ARAÇ</b><button id="measure">ÖLÇ</button><button id="clear">TEMİZLE</button></div>
 </div>
@@ -84,6 +86,29 @@ ground.rotation.x=-Math.PI/2; ground.position.set(24,0,20); scene.add(ground);
 const grid=new THREE.GridHelper(200,40,0x5a5048,0x4a423b); grid.position.set(24,0.002,20); scene.add(grid);
 
 const pick=[]; const labels=[]; const boxCenters={};
+const washGroup=new THREE.Group(); scene.add(washGroup);
+const washTex=(()=>{const c=document.createElement('canvas');c.width=64;c.height=256;const x=c.getContext('2d');const im=x.createImageData(64,256);
+  for(let j=0;j<256;j++){const t=1-j/255; const v=Math.pow(1-t,1.7)*0.72+0.04*(1-t);
+    for(let i=0;i<64;i++){const u=i/63; const h=Math.min(1,Math.min(u,1-u)*5.5); const a=v*h*h;
+      const k=(j*64+i)*4; im.data[k]=255; im.data[k+1]=214; im.data[k+2]=150; im.data[k+3]=Math.round(255*a);}}
+  x.putImageData(im,0,0); const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;})();
+const washMat=new THREE.MeshBasicMaterial({map:washTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+const fixMat=new THREE.MeshBasicMaterial({color:0x1d1d1f}); const ledMat=new THREE.MeshBasicMaterial({color:0xffe2b0});
+const poolMat=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,210,150,0.55)');g.addColorStop(1,'rgba(255,210,150,0)');x.fillStyle=g;x.fillRect(0,0,128,128);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});})();
+function addWasher(s,w){
+  const n=s.n, x0=w.x-0.3, x1=w.x+w.W+0.3, yb=w.y-0.15, yt=w.y+w.H+0.9;
+  const P=(x,y,o)=>{const u=x-s.e0; return [s.p0[0]+s.d[0]*u+n[0]*o, y, s.p0[1]+s.d[1]*u+n[1]*o];};
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute([...P(x0,yb,0.03),...P(x1,yb,0.03),...P(x1,yt,0.03),...P(x0,yt,0.03)],3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,1,1,0,1],2)); g.setIndex([0,1,2,0,2,3]);
+  washGroup.add(new THREE.Mesh(g,washMat));
+  const ang=Math.atan2(s.d[1],s.d[0]);
+  const off=w.mount==='ground'?0.45:0.1, fy=w.mount==='ground'?0.06:w.y-0.07;
+  const c=P(w.x+w.W/2,fy,off);
+  const fx=new THREE.Mesh(new THREE.BoxGeometry(w.W*0.92,0.08,0.14),fixMat); fx.position.set(...c); fx.rotation.y=-ang; washGroup.add(fx);
+  const led=new THREE.Mesh(new THREE.BoxGeometry(w.W*0.9,0.012,0.06),ledMat); led.position.set(c[0],c[1]+0.046,c[2]); led.rotation.y=-ang; washGroup.add(led);
+  if(w.mount==='ground'){const pool=new THREE.Mesh(new THREE.PlaneGeometry(w.W*1.3,1.6),poolMat); pool.rotation.x=-Math.PI/2; pool.rotation.z=-ang; const pc=P(w.x+w.W/2,0.012,0.5); pool.position.set(...pc); washGroup.add(pool);}
+}
 const dark=new THREE.MeshBasicMaterial({color:0x0c120e,side:THREE.DoubleSide});
 const roofTex=await tex('tex/roof.jpg');
 const roofMat=new THREE.MeshBasicMaterial({map:roofTex});
@@ -114,6 +139,7 @@ for(const bx of data.boxes){
     const gi=new THREE.BufferGeometry(); gi.setAttribute('position',new THREE.Float32BufferAttribute(posIn,3)); gi.setIndex(idx);
     scene.add(new THREE.Mesh(gi,dark));
   }
+  for(const w of bx.washers){const s=sides.find(s=>w.x+w.W/2>=s.e0-0.01&&w.x+w.W/2<=s.e0+s.L+0.01); if(s) addWasher(s,w);}
   // roof
   const rc=bx.roof.map(p=>new THREE.Vector2(p[0],p[1]));
   const rt=THREE.ShapeUtils.triangulateShape(rc,[]);
@@ -155,8 +181,8 @@ document.getElementById('views').addEventListener('click',e=>{const v=e.target.d
 camera.position.set(70,48,85); controls.target.copy(CEN);
 
 // layers
-const on={box:1,strip:1,panel:1,logo:1,ribbon:1,sign:1,door:1};
-document.getElementById('layers').addEventListener('click',e=>{const l=e.target.dataset?.l; if(!l) return; on[l]=!on[l]; e.target.classList.toggle('on',!!on[l]);});
+const on={box:1,strip:1,panel:1,logo:1,ribbon:1,sign:1,door:1,upper:1,ww:1};
+document.getElementById('layers').addEventListener('click',e=>{const l=e.target.dataset?.l; if(!l) return; on[l]=!on[l]; e.target.classList.toggle('on',!!on[l]); if(l==='ww') washGroup.visible=!!on[l];});
 
 // hover readout + measure
 const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(); const info=document.getElementById('info');
@@ -170,7 +196,7 @@ canvas.addEventListener('pointermove',ev=>{
   const u=s.e0+(P.x-s.p0[0])*s.d[0]+(P.z-s.p0[1])*s.d[1]; const y=P.y;
   let t=`<span class="k">KUTU ${box}</span> · yükseklik ${fmt(y)} m`;
   if(y<2){const st=strips.find(q=>u>=q.x0&&u<=q.x1); if(st) t+=` · <span class="k">${st.code}</span> içinde soldan ${fmt(u-st.x0)} m / ${fmt(st.x1-st.x0)} m`; }
-  else t+=` · üst mesh (düz yeşil) · açılımda ${fmt(u)} m`;
+  else t+=` · üst mesh · yüzey açılımında ${fmt(u)} m`;
   info.innerHTML=t;
 });
 let mOn=false, mPts=[], mObjs=[];
