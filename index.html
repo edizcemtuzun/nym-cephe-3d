@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Year's Market · Cephe 3D İnceleme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--red:#9B2827;--green:#1E3B2F;--cream:#F6E4BA;--white:#FFFCF4;--gold:#D6B87E}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#12151f;color:var(--white);font-family:'Roboto Mono',ui-monospace,monospace;overflow:hidden}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  header{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--red);z-index:5;flex-wrap:wrap}
+  header h1{margin:0;font-size:13px;letter-spacing:.16em;font-weight:700;white-space:nowrap}
+  header .sub{font-size:10px;letter-spacing:.1em;color:var(--cream);opacity:.9}
+  .bar{position:fixed;left:12px;top:58px;display:flex;flex-direction:column;gap:8px;z-index:5;max-width:230px}
+  .grp{background:rgba(18,24,20,.86);border:1px solid rgba(246,228,186,.25);padding:8px;display:flex;flex-wrap:wrap;gap:5px}
+  .grp b{width:100%;font-size:9px;letter-spacing:.14em;color:var(--gold);font-weight:700;margin-bottom:2px}
+  button{font:700 10px 'Roboto Mono',monospace;letter-spacing:.08em;background:transparent;color:var(--cream);border:1px solid rgba(246,228,186,.45);padding:5px 7px;cursor:pointer}
+  button:hover{background:rgba(246,228,186,.12)}
+  button.on{background:var(--cream);color:var(--green)}
+  #info{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(18,24,20,.9);border:1px solid rgba(246,228,186,.3);padding:8px 12px;font-size:11px;letter-spacing:.06em;z-index:5;min-width:280px;text-align:center;pointer-events:none}
+  #info .k{color:var(--gold)}
+  .lbl{position:fixed;left:0;top:0;transform:translate(-50%,-50%);font-size:10px;letter-spacing:.05em;white-space:nowrap;padding:3px 6px;pointer-events:none;z-index:3;border:1px solid;font-weight:700}
+  .lbl.strip{background:rgba(155,40,39,.9);border-color:#e9b6a8;color:#fff}
+  .lbl.panel{background:rgba(30,59,47,.92);border-color:var(--gold);color:var(--gold)}
+  .lbl.logo{background:rgba(30,59,47,.92);border-color:var(--white);color:var(--white)}
+  .lbl.ribbon{background:rgba(185,31,28,.92);border-color:#fff;color:#fff}
+  .lbl.sign{background:rgba(40,44,120,.92);border-color:#9ea4ff;color:#dfe1ff}
+  .lbl.door{background:rgba(214,184,126,.95);border-color:var(--green);color:var(--green)}
+  .lbl.box{background:var(--cream);border-color:var(--red);color:var(--red);font-size:12px;padding:4px 8px}
+  .lbl.meas{background:#fff;border-color:#000;color:#000;font-size:12px}
+  #load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.2em;color:var(--cream);z-index:9;background:#12151f}
+  #help{position:fixed;right:12px;top:58px;background:rgba(18,24,20,.86);border:1px solid rgba(246,228,186,.25);padding:8px 10px;font-size:9.5px;line-height:1.7;letter-spacing:.05em;color:var(--cream);z-index:5;max-width:250px}
+  #help span{color:var(--gold)}
+  @media (max-width:700px){#help{display:none}.bar{max-width:170px}header .sub{display:none}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="load">YÜKLENİYOR…</div>
+<header><h1>NEW YEAR'S MARKET · CEPHE 3D</h1><span class="sub">GALATAPORT · SAAT KULESİ MEYDANI · ALT 2 M MESH BASKI + KURDELE + TABELA</span></header>
+<div class="bar">
+  <div class="grp" id="views"><b>GÖRÜNÜM</b><button data-v="all">GENEL</button><button data-v="top">ÜSTTEN</button></div>
+  <div class="grp" id="layers"><b>ETİKETLER</b>
+    <button class="on" data-l="box">KUTU</button><button class="on" data-l="strip">BASKI PARÇASI</button>
+    <button class="on" data-l="panel">NYM PANEL</button><button class="on" data-l="logo">LOGO</button>
+    <button class="on" data-l="ribbon">KURDELE</button><button class="on" data-l="sign">TABELA</button><button class="on" data-l="door">GİRİŞ</button>
+  </div>
+  <div class="grp"><b>ARAÇ</b><button id="measure">ÖLÇ</button><button id="clear">TEMİZLE</button></div>
+</div>
+<div id="help"><span>SOL TUŞ</span> döndür · <span>SAĞ TUŞ</span> kaydır · <span>TEKER</span> yakınlaş<br>Cephenin üstüne gelince alttaki kutuda o noktanın <span>baskı parçası</span> ve <span>ölçüsü</span> yazar.<br><span>ÖLÇ</span>: iki noktaya tıkla, arası metre olarak çıkar.<br>Ölçüler SketchUp açılımlarından, kurdele yerleri Branding Çatı V12 planından alınmıştır.</div>
+<div id="info">Cephenin üzerine gel</div>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x151824);
+scene.fog=new THREE.Fog(0x151824,110,300);
+const camera=new THREE.PerspectiveCamera(45,1,0.1,600);
+const controls=new OrbitControls(camera,canvas);
+controls.enableDamping=true; controls.maxPolarAngle=Math.PI*0.495; controls.minDistance=2; controls.maxDistance=180;
+
+const fmt=v=>v.toFixed(2).replace('.',',');
+async function tex(url){
+  const r=await fetch(url); const b=await r.blob(); const u=URL.createObjectURL(b);
+  return await new Promise((res,rej)=>new THREE.TextureLoader().load(u,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();res(t)},undefined,rej));
+}
+const data=await (await fetch('data.json')).json();
+const [PW,PH]=data.roofPage.map(v=>v/1000);
+
+// ground
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),new THREE.MeshBasicMaterial({color:0x3b342e}));
+ground.rotation.x=-Math.PI/2; ground.position.set(24,0,20); scene.add(ground);
+const grid=new THREE.GridHelper(200,40,0x5a5048,0x4a423b); grid.position.set(24,0.002,20); scene.add(grid);
+
+const pick=[]; const labels=[]; const boxCenters={};
+const dark=new THREE.MeshBasicMaterial({color:0x0c120e,side:THREE.DoubleSide});
+const roofTex=await tex('tex/roof.jpg');
+const roofMat=new THREE.MeshBasicMaterial({map:roofTex});
+
+function addLabel(kind,text,pos,normal){
+  const el=document.createElement('div'); el.className='lbl '+kind; el.textContent=text; document.body.appendChild(el);
+  labels.push({el,kind,pos,normal});
+}
+for(const bx of data.boxes){
+  const sides=bx.sides.map(s=>({...s,n:[-s.d[1],s.d[0]]}));
+  const texs=await Promise.all(sides.map(s=>tex(s.tex)));
+  for(const f of bx.faces){
+    const s=sides[f.side];
+    const cont=f.pts.map(p=>new THREE.Vector2(p[0],p[1]));
+    if(THREE.ShapeUtils.isClockWise(cont)) cont.reverse();
+    const tris=THREE.ShapeUtils.triangulateShape(cont,[]);
+    const pos=[],uv=[],posIn=[];
+    for(const p of cont){
+      const u=p.x-s.e0, X=s.p0[0]+s.d[0]*u, Z=s.p0[1]+s.d[1]*u;
+      pos.push(X,p.y,Z); posIn.push(X-s.n[0]*0.04,p.y,Z-s.n[1]*0.04);
+      uv.push(u/s.L,p.y/bx.Htex);
+    }
+    const idx=tris.flat();
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx);
+    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:texs[f.side],side:THREE.DoubleSide}));
+    m.userData={box:bx.id,side:s,strips:bx.strips};
+    scene.add(m); pick.push(m);
+    const gi=new THREE.BufferGeometry(); gi.setAttribute('position',new THREE.Float32BufferAttribute(posIn,3)); gi.setIndex(idx);
+    scene.add(new THREE.Mesh(gi,dark));
+  }
+  // roof
+  const rc=bx.roof.map(p=>new THREE.Vector2(p[0],p[1]));
+  const rt=THREE.ShapeUtils.triangulateShape(rc,[]);
+  const rp=[],ru=[];
+  for(const p of rc){rp.push(p.x,bx.H+0.005,p.y); ru.push(p.x/PW,1-p.y/PH);}
+  const rg=new THREE.BufferGeometry(); rg.setAttribute('position',new THREE.Float32BufferAttribute(rp,3)); rg.setAttribute('uv',new THREE.Float32BufferAttribute(ru,2)); rg.setIndex(rt.flat());
+  scene.add(new THREE.Mesh(rg,Object.assign(roofMat.clone(),{side:THREE.DoubleSide})));
+  const cx=rc.reduce((a,p)=>a+p.x,0)/rc.length, cz=rc.reduce((a,p)=>a+p.y,0)/rc.length;
+  boxCenters[bx.id]={x:cx,z:cz,H:bx.H,sides};
+  addLabel('box',`KUTU ${bx.id} · H ${fmt(bx.H)} m`,new THREE.Vector3(cx,bx.H+0.9,cz),null);
+  // facade labels
+  for(const it of bx.items){
+    const s=sides.find(s=>it.x>=s.e0-0.01&&it.x<=s.e0+s.L+0.01); if(!s) continue;
+    const u=it.x-s.e0;
+    const P=new THREE.Vector3(s.p0[0]+s.d[0]*u+s.n[0]*0.25,it.y,s.p0[1]+s.d[1]*u+s.n[1]*0.25);
+    addLabel(it.k,it.t,P,new THREE.Vector3(s.n[0],0,s.n[1]));
+  }
+  // view button
+  const btn=document.createElement('button'); btn.textContent='KUTU '+bx.id; btn.dataset.v=bx.id; document.getElementById('views').appendChild(btn);
+}
+document.getElementById('load').remove();
+
+// views
+const CEN=new THREE.Vector3(24,3,20);
+function fly(pos,tgt){
+  const p0=camera.position.clone(), t0=controls.target.clone(); let k=0;
+  const step=()=>{k=Math.min(1,k+0.04); const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    camera.position.lerpVectors(p0,pos,e); controls.target.lerpVectors(t0,tgt,e); if(k<1) requestAnimationFrame(step)}; step();
+}
+const MAIN={1:1,2:1,3:2,4:1,5:1,6:1,7:3};
+function view(v){
+  if(v==='all') return fly(new THREE.Vector3(70,48,85),CEN);
+  if(v==='top') return fly(new THREE.Vector3(24,95,20.6),new THREE.Vector3(24,0,20));
+  const b=boxCenters[v]; const s=b.sides[MAIN[v]??0];
+  const mx=s.p0[0]+s.d[0]*s.L/2, mz=s.p0[1]+s.d[1]*s.L/2; const D=Math.max(9,s.L*0.75+4);
+  fly(new THREE.Vector3(mx+s.n[0]*D+s.d[0]*D*0.25,3.2+D*0.18,mz+s.n[1]*D+s.d[1]*D*0.25),new THREE.Vector3(mx,Math.min(3,b.H/2),mz));
+}
+document.getElementById('views').addEventListener('click',e=>{const v=e.target.dataset?.v; if(!v) return; view(isNaN(+v)?v:+v);});
+camera.position.set(70,48,85); controls.target.copy(CEN);
+
+// layers
+const on={box:1,strip:1,panel:1,logo:1,ribbon:1,sign:1,door:1};
+document.getElementById('layers').addEventListener('click',e=>{const l=e.target.dataset?.l; if(!l) return; on[l]=!on[l]; e.target.classList.toggle('on',!!on[l]);});
+
+// hover readout + measure
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(); const info=document.getElementById('info');
+function hit(ev){
+  const r=canvas.getBoundingClientRect(); mouse.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(mouse,camera); const h=ray.intersectObjects([...pick,ground],false); return h[0];
+}
+canvas.addEventListener('pointermove',ev=>{
+  const h=hit(ev); if(!h||h.object===ground){info.innerHTML='Cephenin üzerine gel';return}
+  const {box,side:s,strips}=h.object.userData; const P=h.point;
+  const u=s.e0+(P.x-s.p0[0])*s.d[0]+(P.z-s.p0[1])*s.d[1]; const y=P.y;
+  let t=`<span class="k">KUTU ${box}</span> · yükseklik ${fmt(y)} m`;
+  if(y<2){const st=strips.find(q=>u>=q.x0&&u<=q.x1); if(st) t+=` · <span class="k">${st.code}</span> içinde soldan ${fmt(u-st.x0)} m / ${fmt(st.x1-st.x0)} m`; }
+  else t+=` · üst mesh (düz yeşil) · açılımda ${fmt(u)} m`;
+  info.innerHTML=t;
+});
+let mOn=false, mPts=[], mObjs=[];
+const mBtn=document.getElementById('measure');
+mBtn.onclick=()=>{mOn=!mOn; mBtn.classList.toggle('on',mOn); mPts=[]; controls.enabled=true;};
+document.getElementById('clear').onclick=()=>{mObjs.forEach(o=>o.el?o.el.remove():scene.remove(o)); mObjs=[]; mPts=[]; for(let i=labels.length-1;i>=0;i--) if(labels[i].kind==='meas') labels.splice(i,1);};
+let down=null;
+canvas.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);
+canvas.addEventListener('pointerup',ev=>{
+  if(!mOn||!down||Math.hypot(ev.clientX-down[0],ev.clientY-down[1])>5) return;
+  const h=hit(ev); if(!h) return; const p=h.point.clone();
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(0.12,12,8),new THREE.MeshBasicMaterial({color:0xffffff})); dot.position.copy(p); scene.add(dot); mObjs.push(dot);
+  mPts.push(p);
+  if(mPts.length===2){
+    const [a,b]=mPts; const g=new THREE.BufferGeometry().setFromPoints([a,b]);
+    const ln=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffffff})); scene.add(ln); mObjs.push(ln);
+    const mid=a.clone().add(b).multiplyScalar(.5);
+    const dh=Math.hypot(b.x-a.x,b.z-a.z), dv=Math.abs(b.y-a.y);
+    const el=document.createElement('div'); el.className='lbl meas'; el.textContent=`${fmt(a.distanceTo(b))} m  (yatay ${fmt(dh)} · dikey ${fmt(dv)})`; document.body.appendChild(el);
+    labels.push({el,kind:'meas',pos:mid,normal:null}); mObjs.push({el}); mPts=[];
+  }
+});
+on.meas=1;
+
+function resize(){const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();}
+addEventListener('resize',resize); resize();
+const v=new THREE.Vector3(), tmp=new THREE.Vector3(); const occ=new THREE.Raycaster(); let frame=0;
+function loop(){
+  controls.update(); renderer.render(scene,camera);
+  const w=innerWidth,h=innerHeight; frame++;
+  for(const L of labels){
+    let show=!!on[L.kind];
+    if(show&&L.normal){tmp.copy(camera.position).sub(L.pos); const d=tmp.length(); if(tmp.dot(L.normal)<0) show=false; if(d>(L.kind==='strip'?60:38)) show=false;
+      if(show&&(frame%8===0||L.occ===undefined)){ occ.set(camera.position,tmp.clone().negate().normalize()); occ.far=d-0.4; L.occ=occ.intersectObjects(pick,false).length>0; }
+      if(L.occ) show=false; }
+    if(show&&L.kind==='box'){ if(frame%8===0||L.occ===undefined){tmp.copy(L.pos).sub(camera.position); const d=tmp.length(); occ.set(camera.position,tmp.normalize()); occ.far=d-0.5; L.occ=occ.intersectObjects(pick,false).length>0;} if(L.occ) show=false; }
+    if(show){v.copy(L.pos).project(camera); if(v.z>1) show=false; else {L.el.style.left=((v.x+1)/2*w)+'px'; L.el.style.top=((1-v.y)/2*h)+'px';}}
+    L.el.style.display=show?'block':'none';
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
