@@ -45,17 +45,17 @@
 <body>
 <canvas id="c"></canvas>
 <div id="load">YÜKLENİYOR…</div>
-<header><h1>NEW YEAR'S MARKET · CEPHE 3D</h1><span class="sub">GALATAPORT · SAAT KULESİ MEYDANI · ALT 2 M MESH BASKI + KURDELE + TABELA + WALL WASHER</span></header>
+<header><h1>NEW YEAR'S MARKET · CEPHE 3D</h1><span class="sub">GALATAPORT · SAAT KULESİ MEYDANI · 21 YÜZEY TAM CEPHE BASKI (ALT 2 M DESEN) + KURDELE + TABELA + WALL WASHER</span></header>
 <div class="bar">
   <div class="grp" id="views"><b>GÖRÜNÜM</b><button data-v="all">GENEL</button><button data-v="top">ÜSTTEN</button></div>
   <div class="grp" id="layers"><b>ETİKETLER</b>
-    <button class="on" data-l="box">KUTU</button><button class="on" data-l="strip">BASKI PARÇASI</button>
+    <button class="on" data-l="box">KUTU</button><button class="on" data-l="strip">BASKI YÜZEYİ</button>
     <button class="on" data-l="panel">NYM PANEL</button><button class="on" data-l="logo">LOGO</button>
     <button class="on" data-l="ww">WALL WASHER</button><button class="on" data-l="ribbon">KURDELE</button><button class="on" data-l="sign">TABELA</button><button class="on" data-l="door">GİRİŞ</button>
   </div>
   <div class="grp"><b>ARAÇ</b><button id="measure">ÖLÇ</button><button id="clear">TEMİZLE</button></div>
 </div>
-<div id="help"><span>SOL TUŞ</span> döndür · <span>SAĞ TUŞ</span> kaydır · <span>TEKER</span> yakınlaş<br>Cephenin üstüne gelince alttaki kutuda o noktanın <span>baskı parçası</span> ve <span>ölçüsü</span> yazar.<br><span>ÖLÇ</span>: iki noktaya tıkla, arası metre olarak çıkar.<br>Ölçüler SketchUp açılımlarından, kurdele yerleri Branding Çatı V12 planından alınmıştır.</div>
+<div id="help"><span>SOL TUŞ</span> döndür · <span>SAĞ TUŞ</span> kaydır · <span>TEKER</span> yakınlaş<br>Cephenin üstüne gelince alttaki kutuda o noktanın <span>baskı yüzeyi</span> (K1-Y1 gibi) ve <span>ölçüsü</span> yazar.<br><span>ÖLÇ</span>: iki noktaya tıkla, arası metre olarak çıkar.<br>Ölçüler SketchUp açılımlarından, kurdele yerleri Branding Çatı V12 planından alınmıştır.</div>
 <div id="info">Cephenin üzerine gel</div>
 <script type="module">
 import * as THREE from 'three';
@@ -195,8 +195,7 @@ canvas.addEventListener('pointermove',ev=>{
   const {box,side:s,strips}=h.object.userData; const P=h.point;
   const u=s.e0+(P.x-s.p0[0])*s.d[0]+(P.z-s.p0[1])*s.d[1]; const y=P.y;
   let t=`<span class="k">KUTU ${box}</span> · yükseklik ${fmt(y)} m`;
-  if(y<2){const st=strips.find(q=>u>=q.x0&&u<=q.x1); if(st) t+=` · <span class="k">${st.code}</span> içinde soldan ${fmt(u-st.x0)} m / ${fmt(st.x1-st.x0)} m`; }
-  else t+=` · üst mesh · yüzey açılımında ${fmt(u)} m`;
+  {const st=strips.find(q=>u>=q.x0-0.001&&u<=q.x1+0.001); if(st) t+=` · <span class="k">${st.code}</span> baskısında soldan ${fmt(u-st.x0)} m / ${fmt(st.x1-st.x0)} m${y<2?' · desen alanı':' · düz yeşil'}`; }
   info.innerHTML=t;
 });
 let mOn=false, mPts=[], mObjs=[];
